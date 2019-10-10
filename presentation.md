@@ -1,21 +1,27 @@
 ## Python for Bankers
+
+#### Using programming to supercharge your day
+
 ----
-### aka 
-Using python and other languages to do analysis and build cool things and no longer being locked down by manual work in Microsoft products that are not repeatable, maintainable or scalable.
-----
+
 ### Who is this for? 
+
 You, if: 
+
 * Your available tools are limited to Excel + Powerpoint, but you want something more powerful
 * You've heard that Python is basically the coolest thing since the Chipotle burrito
 * You studied computer science, engineering, math...or philosophy, Spanish, or pre-law...or didn't go to college. Really, as long as you want to learn to code, you can
+
 ----
 ### What we want to cover:
+* What is programming? Is this for me? 
+* What is programming used for? I'm not planning on becoming a software developer
+* Why are there different programming languages and why are we talking about Python?
 * A minimal overview of the language itself, but just to understand what the foundational concepts are. For syntax and more, Google is your friend
-* Really understanding how other programming languages differ from Microsoft's VBA 
 * (Most of our time) Walking through some real world examples of writing code to get data, transform data, and do analysis
 ----
 ### Topics:
-1. Why is programming awesome?
+1. What is programming? Is this for me? 
 2. A minute on VBA 
 3. The Python story
 4. Python language basics
@@ -25,16 +31,150 @@ You, if:
     3. Web scraping/Information Retrieval
     4. Basic Machine Learning: Handwritten digit recognition
 ----
-#### Why is programming awesome? 
+#### What is programming? Is this for me? 
 
-* You can build something real. Charts, websites, apps, write code that analyzes huge amounts of data. 
-* You're telling the computer exactly what to do. Going from VBA->Python->C, you're getting closer and closer to the bare metal of a computer. Controlling what is happening on a CPU with threads and processes, understanding how data is stored in memory and caches, down to the actual instructions run on different CPU architectures. 
+* Tell the computer what to do, and how. 
+* The closer you get to the physical hardware, the more power you have but that comes with complexity
+
+![img](./img/language_tower.jpg) <!-- .element height="60%" width="60%" -->
+
+src: https://techblog.vn/everything-you-should-know-when-design-a-domain-specific-language-pt-3-dsl-design-strategies
 
 ----
+#### What types of tasks involve programming?
+* Software development: Creating the Google search engine, Youtube, Microsoft Excel, quant trading systems, instagram, iOS and more
+* Software sometimes has a visual component (websites, apps, GUIs). Sometimes is very math heavy (data science, machine learning). Sometimes is very process driven (an order flow system at a bank)
+* Programming doesn't always mean building full fledged software. Sometimes programming is used to do a small task quickly ("scripting")
 
-* View the world and your work through a very objective lens. Code either compiles or it doesn't. It passes test cases or doesn't. There is a strong sense of objectivity and order in programming not found in anything else
-* Share your code with communities around the world on Github/Gitlab, create open source projects, see your code reused, contribute to other projects. 
 ----
+#### Some examples of when "scripting" is handy
+* "I want to rename 5000 files in a folder based on certain criteria"
+* "I have a list of hundreds of files I need to download from a website"
+* "I need to scan through these 100 text files and pull out each email address"
+* "I need to process a directory of CSV files and restructure the data and add a few new processed columns but its too big for Excel"
+* "I want to process these data sets and automatically create time series charts and save them to a folder"
+----
+#### What will I learn
+As you progress, you'll learn how a computer works and how it interacts with other computers
+* How do I interact with my filesystem and operating system? What is the difference between the hard drive and memory?
+* How do I make requests over a network? What are protocols? How does the internet work?
+* Why are data stored in different file formats? How do I process those? 
+* How do I interact with other programs (e.g. a browser)? 
+----
+
+#### Why so many languages
+
+* C and C++ take far longer to learn, but you can create an entire operating system or write a graphics driver
+* With Java or C++ you might create a low latency trading system
+* With Python you can analyze data, do machine learning, create charts, interact with web browsers, and more
+
+----
+#### An example of an http request (getting a website)
+First, in C:
+```
+// Src: https://stackoverflow.com/questions/22077802/simple-c-example-of-doing-an-http-post-and-consuming-the-response
+#include <stdio.h> /* printf, sprintf */
+#include <stdlib.h> /* exit */
+#include <unistd.h> /* read, write, close */
+#include <string.h> /* memcpy, memset */
+#include <sys/socket.h> /* socket, connect */
+#include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
+#include <netdb.h> /* struct hostent, gethostbyname */
+
+void error(const char *msg) { perror(msg); exit(0); }
+
+int main(int argc,char *argv[])
+{
+    /* first what are we going to send and where are we going to send it? */
+    int portno =        80;
+    char *host =        "api.somesite.com";
+    char *message_fmt = "POST /apikey=%s&command=%s HTTP/1.0\r\n\r\n";
+
+    struct hostent *server;
+    struct sockaddr_in serv_addr;
+    int sockfd, bytes, sent, received, total;
+    char message[1024],response[4096];
+
+    if (argc < 3) { puts("Parameters: <apikey> <command>"); exit(0); }
+
+    /* fill in the parameters */
+    sprintf(message,message_fmt,argv[1],argv[2]);
+    printf("Request:\n%s\n",message);
+
+    /* create the socket */
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) error("ERROR opening socket");
+
+    /* lookup the ip address */
+    server = gethostbyname(host);
+    if (server == NULL) error("ERROR, no such host");
+
+    /* fill in the structure */
+    memset(&serv_addr,0,sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(portno);
+    memcpy(&serv_addr.sin_addr.s_addr,server->h_addr,server->h_length);
+
+    /* connect the socket */
+    if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
+        error("ERROR connecting");
+
+    /* send the request */
+    total = strlen(message);
+    sent = 0;
+    do {
+        bytes = write(sockfd,message+sent,total-sent);
+        if (bytes < 0)
+            error("ERROR writing message to socket");
+        if (bytes == 0)
+            break;
+        sent+=bytes;
+    } while (sent < total);
+
+    /* receive the response */
+    memset(response,0,sizeof(response));
+    total = sizeof(response)-1;
+    received = 0;
+    do {
+        bytes = read(sockfd,response+received,total-received);
+        if (bytes < 0)
+            error("ERROR reading response from socket");
+        if (bytes == 0)
+            break;
+        received+=bytes;
+    } while (received < total);
+
+    if (received == total)
+        error("ERROR storing complete response from socket");
+
+    /* close the socket */
+    close(sockfd);
+
+    /* process response */
+    printf("Response:\n%s\n",response);
+
+    return 0;
+}
+```
+
+----
+#### And in Python
+```
+# src: https://stackoverflow.com/questions/11322430/how-to-send-post-request
+import requests
+r = requests.post("http://bugs.python.org", data={'number': 12524, 'type': 'issue', 'action': 'show'})
+print(r.status_code, r.reason)
+# 200 OK
+print(r.text[:300] + '...')
+```
+----
+#### Why?
+* Python is actually written in C++, so it comes with many features (an `http` library in this case) that is implemented in a lower level language
+* And Python has a rich community of contributors, who built an even nicer `requests` library on top of the `http` library
+
+* Lesson: Python has limitations when you want to do really complex things but is *extremely* flexible to use, fast to learn, and handy for many different types of tasks
+----
+
 * And you can literally start programming on almost any modern computer. 
 ![img](./img/js_chrome.png)
 Search for "Dev Tools" in Chrome to write some javascript
@@ -73,15 +213,19 @@ https://en.wikipedia.org/wiki/Python_(programming_language)
 
 ----
 ### A few details
-* Interpreted and high level (unlike Java, C, C++, etc)
-* Written in C and can create C extensions
-* "Batteries included": Very big standard library to get lots of things done quickly
 * Easy to learn syntax: Has created massive community of new programmers
+* "Batteries included": Very big standard library to get lots of things done quickly
 * Huge contributor community: There is a python package for just about anything
 
 ----
 ### The community
 ![img](./img/python_popularity.png) <!-- .element height="50%" width="50%" -->
+
+----
+### Is there an app to interact with Robinhood?
+
+![img](./img/github_robinhood.png)
+
 
 ----
 ### Python owns the numerical computing stack
@@ -92,7 +236,7 @@ https://en.wikipedia.org/wiki/Python_(programming_language)
 
 ----
 ### The future (in 2012)
-<iframe title="New York Times Video - Embed Player" width="480" height="321" frameborder="0" scrolling="no" allowfullscreen="true" marginheight="0" marginwidth="0" id="nyt_video_player" src="https://www.nytimes.com/video/players/offsite/index.html?videoId=100000001629221"></iframe>
+<iframe title="New York Times Video - Embed Player" width="960" height="640" frameborder="0" scrolling="no" allowfullscreen="true" marginheight="0" marginwidth="0" id="nyt_video_player" src="https://www.nytimes.com/video/players/offsite/index.html?videoId=100000001629221"></iframe>
 
 ----
 ### ML gone wrong
