@@ -239,10 +239,6 @@ https://en.wikipedia.org/wiki/Python_(programming_language)
 <iframe title="New York Times Video - Embed Player" width="960" height="640" frameborder="0" scrolling="no" allowfullscreen="true" marginheight="0" marginwidth="0" id="nyt_video_player" src="https://www.nytimes.com/video/players/offsite/index.html?videoId=100000001629221"></iframe>
 
 ----
-### ML gone wrong
-<iframe width="763" height="429" src="https://www.youtube.com/embed/ACmydtFDTGs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-----
 ### Down to business
 ----
 ### Python basics: How to run
